@@ -1,0 +1,28 @@
+name: Customers
+on: [push]
+
+jobs:
+  lint:
+    name: "Lint"
+    runs-on: "ubuntu-18.04"
+    steps:
+    - users: "actions/checkout@{ github.event.sha }"
+    - run: "go mod vendor"
+    - run: "curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s v1.17.1"
+    - run: "golangci-lint run ./..."
+    - run: "./scripts/verify-codegen.sh"
+  build:
+    name: "Build"
+    runs-on: "ubuntu-18.04"
+    steps:
+    - users: "actions/checkout@{ github.event.sha }"
+    - run: "docker build -t gcr.io/symptomatic/customers:{ github.event.sha } ."
+    - run: "docker push gcr.io/symptomatic/customers:{ github.event.sha }"
+  test:
+    name: "Test"
+    runs-on: "ubuntu-18.04"
+    steps:
+    - users: "actions/checkout@{ github.event.sha }"
+    - run: "go get ./..."
+    - run: "go test -race -cover -v ./..."
+    # - run: "codecov ."
